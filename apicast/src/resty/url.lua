@@ -1,6 +1,7 @@
 local tostring = tostring
 local re_match = ngx.re.match
 local concat = table.concat
+local tonumber = tonumber
 
 local _M = {
   _VERSION = '0.1'
@@ -40,6 +41,24 @@ function _M.split(url, protocol)
   end
 
   return { scheme, user or false, pass or false, host, port or false, path or nil }
+end
+
+function _M.parse(url, protocol)
+  local parts, err = _M.split(url, protocol)
+
+  if err then
+    return parts, err
+  end
+
+  -- https://tools.ietf.org/html/rfc3986#section-3
+  return {
+    scheme = parts[1] or nil,
+    user = parts[2] or nil,
+    password = parts[3] or nil,
+    host = parts[4] or nil,
+    port = tonumber(parts[5]),
+    path = parts[6] or nil
+  }
 end
 
 function _M.join(...)
