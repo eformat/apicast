@@ -11,6 +11,7 @@ local _M = {
 }
 
 local getenv = os.getenv
+local tostring = tostring
 
 local cached = {}
 
@@ -77,7 +78,7 @@ end
 function _M.set(name, value)
   local env = _M.env
   local previous = env[name]
-  env[name] = value
+  env[name] = tostring(value)
   return previous
 end
 

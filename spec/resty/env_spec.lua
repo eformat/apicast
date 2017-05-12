@@ -44,6 +44,12 @@ describe('env', function()
 
       assert.equal('val', _M.env.SOME_MISSING_KEY)
     end)
+
+    it('converts the value to string', function()
+      _M.set('NUMERIC_VALUE', 1234)
+
+      assert.equal('1234', _M.env.NUMERIC_VALUE)
+    end)
   end)
 
   describe('.reset', function()
