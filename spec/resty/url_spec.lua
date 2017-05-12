@@ -1,4 +1,5 @@
 local url = require 'resty.url'
+local tostring = tostring
 
 describe('resty.url', function()
 
@@ -71,6 +72,11 @@ describe('resty.url', function()
 
     it('works with redis DSN', function()
       assert.same({ scheme = 'redis', user = 'user', password = 'pass', host = 'localhost', port = 6379, path = '/42' }, parse('redis://user:pass@localhost:6379/42', 'redis'))
+    end)
+
+    it('serializes back', function()
+      local url = 'https://user:password@example.com:1234/path?query'
+      assert.equal(url, tostring(parse(url)))
     end)
   end)
 
