@@ -10,6 +10,7 @@ local http_ng = require "resty.http_ng"
 local user_agent = require 'user_agent'
 local cjson = require 'cjson'
 local resty_env = require 'resty.env'
+local configuration = require 'configuration'
 
 local _M = {
   _VERSION = '0.1'
@@ -219,9 +220,11 @@ function _M:config(service, environment, version)
   ngx.log(ngx.DEBUG, 'services get status: ', res.status, ' url: ', url, ' body: ', res.body)
 
   if res.status == 200 then
-    local json = cjson.decode(res.body)
+    local config = cjson.decode(res.body).proxy_config
+    local service = configuration.parse_service(config)
 
-    return json.proxy_config
+  require('resty.repl').start()
+    return config
   else
     return nil, status_code_error(res)
   end

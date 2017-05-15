@@ -23,7 +23,7 @@ local function fetch(name)
   else
     value = getenv(name)
 
-    ngx.log(ngx.DEBUG, 'env: ', name, ' = ', value)
+    ngx.log(ngx.DEBUG, 'env: ', name, ' == ', value)
     _M.env[name] = value
 
     cached[name] = true
@@ -79,6 +79,7 @@ function _M.set(name, value)
   local env = _M.env
   local previous = env[name]
   env[name] = tostring(value)
+  ngx.log(ngx.DEBUG, 'env: ', name, ' = ', value)
   return previous
 end
 

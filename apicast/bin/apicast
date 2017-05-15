@@ -60,19 +60,23 @@ usage () {
 	  -m <on|off> Whether to start worker processes. Only for development.
 	  -s <signal> Send signal to a master process: stop, quit, reopen, reload
 	  -p <pid> Path to the PID file.
+	  -b Load configuration on boot.
 USAGE
 }
 
 main=("")
 args=("")
 
-while getopts ":dc:hvqi:rw:m:s:p:" opt; do
+while getopts ":dc:hvbqi:rw:m:s:p:" opt; do
   case "${opt}" in
     d)
       daemon="on"
       ;;
     c)
-      export THREESCALE_CONFIG_FILE="$OPTARG"
+      export APICAST_CONFIGURATION="$OPTARG"
+      ;;
+    b)
+      export APICAST_CONFIGURATION_LOADER="boot"
       ;;
     v)
 	    log_level=$((log_level == max_log_level ? max_log_level : log_level+1))
