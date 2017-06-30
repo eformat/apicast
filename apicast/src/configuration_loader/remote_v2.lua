@@ -11,6 +11,7 @@ local user_agent = require 'user_agent'
 local cjson = require 'cjson'
 local resty_env = require 'resty.env'
 local configuration = require 'configuration'
+local re = require 'ngx.re'
 
 local _M = {
   _VERSION = '0.1'
@@ -164,7 +165,24 @@ function _M:call(environment)
   return cjson.encode({ services = configs })
 end
 
+local services_subset = function()
+  local services = resty_env.get('APICAST_SERVICES')
+
+  if services then
+    local ids = re.split(services, ',', 'oj')
+    for i=1, #ids do
+      ids[i] = { service = { id = ids[i] } }
+    end
+    services = ids
+  end
+
+  return services
+end
+
 function _M:services()
+  local services = services_subset()
+  if services then return services end
+
   local http_client = self.http_client
 
   if not http_client then
@@ -223,7 +241,6 @@ function _M:config(service, environment, version)
     local config = cjson.decode(res.body).proxy_config
     local service = configuration.parse_service(config)
 
-  require('resty.repl').start()
     return config
   else
     return nil, status_code_error(res)
