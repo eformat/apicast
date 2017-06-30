@@ -21,7 +21,7 @@ local re = require 'ngx.re'
 local env = require 'resty.env'
 local resty_url = require 'resty.url'
 
-local mt = { __index = _M }
+local mt = { __index = _M, __tostring = function() return 'Configuration' end }
 
 local function map(func, tbl)
   local newtbl = {}
@@ -154,6 +154,9 @@ function _M.parse_service(service)
       backend = {
         endpoint = backend_endpoint_override or backend.endpoint,
         host = backend_host_override or backend.host
+      },
+      oidc = {
+        issuer_endpoint = proxy.oidc_issuer_endpoint
       },
       credentials = {
         location = proxy.credentials_location or 'query',

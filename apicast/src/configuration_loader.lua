@@ -9,6 +9,7 @@ local env = require('resty.env')
 local resty_url = require('resty.url')
 local synchronization = require('resty.synchronization').new(1)
 local keycloak = require 'oauth.keycloak'
+local oidc = require 'oauth.oidc'
 local cjson = require 'cjson'
 
 local error = error
@@ -16,6 +17,7 @@ local len = string.len
 local assert = assert
 local pcall = pcall
 local tonumber = tonumber
+local concat = table.concat
 
 local noop = function(...) return ... end
 
@@ -111,7 +113,7 @@ local boot = {
 }
 
 function boot.init(configuration)
-  local config, err, code = _M.run_external_command()
+  local config, err, code = _M.run_external_command('boot')
   local init = _M.configure(configuration, config)
 
   if config and init then
@@ -124,6 +126,14 @@ function boot.init(configuration)
   if ttl() == 0 then
     ngx.log(ngx.EMERG, 'cache is off, cannot store configuration, exiting')
     os.exit(0)
+  end
+
+
+  local oidc_config
+  oidc_config, err, code = _M.run_external_command('oidc ' .. concat(oidc.enabled(init) or {}, ' '))
+
+  if oidc_config then
+    ngx.log(ngx.DEBUG, 'got OpenID Connect configuration: ', oidc_config)
   end
 
   if keycloak.enabled() then
