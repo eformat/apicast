@@ -283,11 +283,10 @@ function _M:call(host)
 
   self:set_backend_upstream(service)
 
-  if service.backend_version == 'oauth' then
-    -- FIXME: what kind of OAuth depends on the Service now
-    local o = oauth.new(self.configuration)
-    local f, params = oauth.call(o, service)
-    self.oauth = o
+  self.oauth = service:oauth()
+
+  if self.oauth then
+    local f, params = oauth.call(self.oauth, service)
 
     if f then
       ngx.log(ngx.DEBUG, 'apicast oauth flow')

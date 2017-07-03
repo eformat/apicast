@@ -34,18 +34,6 @@ local function timestamp_to_seconds_from_now(expiry)
   return ttl
 end
 
--- Formats the realm public key string into Public Key File (PKCS#8) format
-local function format_public_key(key)
-  local formatted_key = "-----BEGIN PUBLIC KEY-----\n"
-  local key_len = len(key)
-  for i=1,key_len,64 do
-    formatted_key = formatted_key..string.sub(key, i, i+63).."\n"
-  end
-  formatted_key = formatted_key.."-----END PUBLIC KEY-----"
-  return formatted_key
-end
-
-
 local function get_public_key(http_client, endpoint)
   local res = http_client.get(endpoint)
 

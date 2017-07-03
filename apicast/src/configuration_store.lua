@@ -14,7 +14,7 @@ local _M = {
   cache_size = 1000
 }
 
-local mt = { __index = _M }
+local mt = { __index = _M, __tostring = function() return 'Configuration Store' end }
 
 function _M.new(cache_size)
   return setmetatable({
@@ -92,12 +92,21 @@ function _M.store(self, config, ttl)
 
   local services = config.services or {}
   local by_host = setmetatable({}, hashed_array)
+  local oidc = config.oidc or {}
 
   local ids = {}
 
   for i=1, #services do
-    local hosts = services[i].hosts or {}
-    local id = services[i].id
+    local service = services[i]
+    local hosts = service.hosts or {}
+    local id = service.id
+
+    if oidc[i] then
+      -- merge service and OIDC config, this is far from ideal, but easy for now
+      for k,v in pairs(oidc[i] or {}) do
+        service.oidc[k] = v
+      end
+    end
 
     if not ids[id] then
       ngx.log(ngx.INFO, 'added service ', id, ' configuration with hosts: ', concat(hosts, ', '), ' ttl: ', ttl)
@@ -107,7 +116,7 @@ function _M.store(self, config, ttl)
         local h = by_host[host]
 
         if #(h) == 0 or _M.path_routing then
-          insert(h, services[i])
+          insert(h, service)
         else
           ngx.log(ngx.WARN, 'skipping host ', host, ' for service ', id, ' already defined by service ', h[1].id)
         end

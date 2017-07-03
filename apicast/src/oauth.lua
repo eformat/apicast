@@ -1,18 +1,14 @@
 local router = require 'router'
 local apicast_oauth = require 'oauth.apicast_oauth'
 local keycloak = require 'oauth.keycloak'
+local oidc = require 'oauth.oidc'
 
 local _M = {
-  _VERSION = '0.0.2'
-}
+  _VERSION = '0.0.2',
 
-function _M.new(configuration)
-  if configuration.keycloak then
-    return keycloak.new(configuration.keycloak)
-  else
-    return apicast_oauth.new()
-  end
-end
+  apicast = apicast_oauth,
+  oidc = oidc,
+}
 
 function _M.router(oauth, service)
   local r = router:new()

@@ -106,6 +106,8 @@ function _M:index(host)
     local proxy_configs = json.proxy_configs or {}
 
     for i=1, #proxy_configs do
+      error('TODO implement OIDC configuration')
+      -- TODO: implement OIDC configuration
       configs[i] = proxy_configs[i].proxy_config.content
     end
 
@@ -138,7 +140,8 @@ function _M:call(environment)
   if not env then
     return nil, 'missing environment'
   end
-  local configs = {}
+
+  local configs = { services = {}, oidc = {} }
 
   local res, err = self:services()
 
@@ -159,10 +162,12 @@ function _M:call(environment)
   end
 
   for i, c in ipairs(configs) do
-    configs[i] = c.content
+    insert(configs.services, c.content)
+    insert(configs.oidc, c.oidc)
+    configs[i] = nil
   end
 
-  return cjson.encode({ services = configs })
+  return cjson.encode(configs)
 end
 
 local services_subset = function()
@@ -209,6 +214,53 @@ function _M:services()
   end
 end
 
+local function openid_configuration_url(endpoint)
+  return resty_url.join(endpoint, '.well-known/openid-configuration')
+end
+
+function _M:oidc_issuer_configuration(service)
+  local http_client = self.http_client
+
+  if not http_client then
+    return nil, 'not initialized'
+  end
+
+  local endpoint = service.oidc.issuer_endpoint
+
+  if not endpoint then
+    return nil, 'no OIDC endpoint'
+  end
+
+  local uri = openid_configuration_url(endpoint)
+  local res = http_client.get(uri)
+
+  if not res.ok then
+    -- TODO: log the response
+    return nil, 'could not get OpenID Connect configuration'
+  end
+
+  local configuration = res.headers.content_type == 'application/json' and cjson.decode(res.body)
+
+  if not configuration then
+    ngx.log(ngx.STDERR, 'failed to get OIDC Issuer Configuration from ', uri, ' status: ', res.status, ' body: ', res.body)
+    return nil, 'invalid JSON'
+  end
+
+  res = http_client.get(configuration.issuer)
+
+  if not res.ok then
+    -- TODO: log the response
+    return nil, 'could not get OpenID Connect Issuer'
+  end
+
+
+  local issuer = cjson.decode(res.body)
+
+  issuer.openid = configuration
+
+  return configuration.issuer, issuer
+end
+
 function _M:config(service, environment, version)
   local http_client = self.http_client
 
@@ -238,10 +290,16 @@ function _M:config(service, environment, version)
   ngx.log(ngx.DEBUG, 'services get status: ', res.status, ' url: ', url, ' body: ', res.body)
 
   if res.status == 200 then
-    local config = cjson.decode(res.body).proxy_config
-    local service = configuration.parse_service(config)
+    local proxy_config = cjson.decode(res.body).proxy_config
 
-    return config
+    local service = configuration.parse_service(proxy_config.content)
+    local issuer, oidc_config = self:oidc_issuer_configuration(service)
+
+    if issuer then
+      proxy_config.oidc = { issuer = issuer, config = oidc_config }
+    end
+
+    return proxy_config
   else
     return nil, status_code_error(res)
   end

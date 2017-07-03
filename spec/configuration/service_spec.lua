@@ -159,4 +159,21 @@ describe('Service object', function()
     end)
 
   end)
+
+  describe(':oauth()', function()
+    describe('backend_version=oauth', function()
+      it('returns OIDC object when there is OIDC config', function()
+        local service = Service.new({backend_version = 'oauth', oidc = { issuer_endpoint = 'http://example.com' }})
+
+        assert.same(require('oauth.oidc'), service:oauth())
+      end)
+
+      it('returns APIcast OAuth object when there is no OIDC config', function()
+        local service = Service.new({backend_version = 'oauth', oidc = { }})
+
+        assert.same(require('oauth.apicast_oauth'), service:oauth())
+      end)
+
+    end)
+  end)
 end)

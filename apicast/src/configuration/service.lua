@@ -11,6 +11,7 @@ local select = select
 
 local http_authorization = require 'resty.http_authorization'
 
+local oauth = require('oauth')
 
 local _M = { }
 local mt = { __index = _M  }
@@ -167,6 +168,20 @@ function _M:extract_credentials()
   end
 
   return extractor(credentials)
+end
+
+function _M:oauth()
+  if self.backend_version ~= 'oauth' then
+    return nil, 'not oauth'
+  end
+
+  local oidc = self.oidc
+
+  if oidc and oidc.issuer_endpoint then
+    return oauth.oidc.new(self)
+  else
+    return oauth.apicast.new(self)
+  end
 end
 
 return _M

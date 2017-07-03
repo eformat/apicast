@@ -244,13 +244,43 @@ function _M.filter_services(services, subset)
   return s
 end
 
+function _M:find_oidc_issuer(endpoint)
+  local oidc = self.oidc
+
+  if not oidc then
+    return nil, 'no OIDC config'
+  end
+
+  local issuer = oidc[endpoint]
+
+  -- string means it is an alias to another issuer
+  if type(issuer) == 'string' then
+    issuer = oidc[issuer]
+  end
+
+  return issuer
+end
+
+function _M:find_oauth(service)
+  local oauth, err = service:oauth()
+
+  if not oauth then
+    return nil, err
+  end
+
+  local oidc_issuer = self:find_oidc_issuer(service.oidc.issuer_endpoint)
+
+  return oauth.new(oidc_issuer)
+end
+
 function _M.new(configuration)
   configuration = configuration or {}
   local services = (configuration or {}).services or {}
 
   return setmetatable({
     version = configuration.timestamp,
-    services = _M.filter_services(map(_M.parse_service, services))
+    services = _M.filter_services(map(_M.parse_service, services)),
+    oidc = configuration.oidc or {}
   }, mt)
 end
 
