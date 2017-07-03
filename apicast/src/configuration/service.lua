@@ -177,7 +177,7 @@ function _M:oauth()
 
   local oidc = self.oidc
 
-  if oidc and oidc.issuer_endpoint then
+  if oidc and oidc.issuer then
     return oauth.oidc.new(self)
   else
     return oauth.apicast.new(self)

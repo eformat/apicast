@@ -101,17 +101,22 @@ function _M:index(host)
   if res.status == 200 then
     local json = cjson.decode(res.body)
 
-    local configs = {}
+    local config = { services = {}, oidc = {}}
 
     local proxy_configs = json.proxy_configs or {}
 
     for i=1, #proxy_configs do
-      error('TODO implement OIDC configuration')
-      -- TODO: implement OIDC configuration
-      configs[i] = proxy_configs[i].proxy_config.content
+      local proxy_config = proxy_configs[i].proxy_config
+      local service = configuration.parse_service(proxy_config.content)
+      local issuer, oidc_config = self:oidc_issuer_configuration(service)
+
+      if issuer then
+        config.oidc[i] = { issuer = issuer, config = oidc_config }
+      end
+      config.services[i] = proxy_config.content
     end
 
-    return cjson.encode({ services = configs })
+    return cjson.encode(config)
   else
     return nil, 'invalid status'
   end
@@ -161,9 +166,9 @@ function _M:call(environment)
     end
   end
 
-  for i, c in ipairs(configs) do
-    insert(configs.services, c.content)
-    insert(configs.oidc, c.oidc)
+  for i=1, #configs do
+    configs.services[i] = configs[i].content
+    configs.oidc[i] = configs[i].oidc
     configs[i] = nil
   end
 

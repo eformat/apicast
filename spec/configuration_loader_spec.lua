@@ -21,13 +21,6 @@ insulate('Configuration object', function()
       assert.falsy(config)
       assert.match('missing configuration', err)
     end)
-
-    it('runs keycloak', function()
-      local config, err = configuration.run_external_command('keycloak', 'apicast')
-
-      assert.falsy(config)
-      assert.match('failed to download keycloak configuration', err)
-    end)
   end)
 
   describe('lazy', function()

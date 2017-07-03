@@ -1,4 +1,5 @@
 local configuration_store = require 'configuration_store'
+local Service = require 'configuration.service'
 
 describe('Proxy', function()
   local configuration, proxy
@@ -16,7 +17,7 @@ describe('Proxy', function()
   describe(':call', function()
     before_each(function()
       ngx.var = { backend_endpoint = 'http://localhost:1853' }
-      configuration:add({ id = 42, hosts = { 'localhost' }})
+      configuration:add(Service.new({ id = 42, hosts = { 'localhost' }}))
     end)
 
     it('has authorize function after call', function()

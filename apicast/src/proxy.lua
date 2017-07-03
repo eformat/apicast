@@ -283,14 +283,17 @@ function _M:call(host)
 
   self:set_backend_upstream(service)
 
-  self.oauth = service:oauth()
+  if service then
+    self.oauth = service:oauth()
 
-  if self.oauth then
-    local f, params = oauth.call(self.oauth, service)
+    -- means that OAuth integration has own router
+    if self.oauth and self.oauth.call then
+      local f, params = self.oauth:call(service)
 
-    if f then
-      ngx.log(ngx.DEBUG, 'apicast oauth flow')
-      return nil, function() return f(params) end
+      if f then
+        ngx.log(ngx.DEBUG, 'apicast oauth flow')
+        return nil, function() return f(params) end
+      end
     end
   end
 
@@ -335,13 +338,6 @@ function _M:access(service)
 
   local ttl
 
-  if self.oauth then
-    credentials, ttl, err = self.oauth:transform_credentials(credentials)
-
-    if err then
-      return error_authorization_failed(service)
-    end
-  end
 
   credentials = encode_args(credentials)
   local usage = encode_args(usage_params)

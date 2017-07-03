@@ -156,7 +156,7 @@ function _M:transform_credentials(credentials)
     local ttl = timestamp_to_seconds_from_now(jwt_obj.payload.exp)
 
     ------
-    -- oauth credentials for keycloak
+    -- OAuth2 credentials for OIDC
     -- @field app_id Client id
     -- @table credentials_oauth
     return { app_id = app_id }, ttl
