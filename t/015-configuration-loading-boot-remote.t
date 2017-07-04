@@ -43,7 +43,7 @@ location = /admin/api/services.json {
 --- request
 GET /t
 --- response_body
-{"services":{}}
+{"services":[],"oidc":[]}
 --- exit_code: 200
 
 
@@ -70,5 +70,5 @@ location = /admin/api/services.json {
 --- request
 GET /t
 --- response_body
-{"services":{}}
+{"services":[],"oidc":[]}
 --- exit_code: 200
